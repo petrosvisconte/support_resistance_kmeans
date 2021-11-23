@@ -51,4 +51,4 @@ class get_data():
         with open("data.csv", "w") as csvfile:
             wr = csv.writer(csvfile, delimiter=',')
             for i in range(0, len(wO)):
-                wr.writerow([candleDate, wO[i],wH[i],wL[i],wC[i],wV[i]])
+                wr.writerow([wD[i], wO[i],wH[i],wL[i],wC[i],wV[i]])
