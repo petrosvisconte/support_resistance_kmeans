@@ -194,30 +194,30 @@ def main():
             rounding_factor = 2
 
             for i in low_centers:
-                i = round(float(i), rounding_factor)
+                #i = float(i)
                 lowss.append(i)
 
             for i in high_centers:
-                i = round(float(i), rounding_factor)
+                #i = float(i)
                 highss.append(i)
 
             print('lows/support: ', lowss)
             print('highs/resistance: ', highss)
 
-            symbol = str(ticker['ticker'])
-            # Plotting
-            plt.style.use('fast')
-            ohlc = data.loc[:, ['Open', 'High', 'Low', 'Close']]
-            fig, ax = mpf.plot(ohlc.dropna(), type='candle', style='charles', show_nontrading=False, returnfig=True,
+        symbol = str(ticker['ticker'])
+        # Plotting
+        plt.style.use('fast')
+        ohlc = data.loc[:, ['Open', 'High', 'Low', 'Close']]
+        fig, ax = mpf.plot(ohlc.dropna(), type='candle', style='charles', show_nontrading=False, returnfig=True,
                            ylabel='Price', title=symbol)
 
-            for low in low_centers[:9]:
-                ax[0].axhline(low[0], color='green', ls='-', alpha=.2)
+        for low in lowss[:9]:
+            ax[0].axhline(low[0], color='green', ls='-', alpha=.2)
 
-            for high in high_centers[-9:]:
-                ax[0].axhline(high[0], color='red', ls='-', alpha=.1)
+        for high in highss[-9:]:
+            ax[0].axhline(high[0], color='red', ls='-', alpha=.1)
 
-            plt.show()
+        plt.show()
 
 
 # Press the green button in the gutter to run the script.
