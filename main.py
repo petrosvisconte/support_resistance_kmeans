@@ -1,3 +1,5 @@
+import datetime
+
 from calculate_support_resistance import calculate_support_resistance
 from get_data import get_data
 import numpy as np
@@ -5,12 +7,15 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import mplfinance as mpf
 from get_date import get_date
+from calculate_last_date import calculate_last_date
+from dateutil import parser
+
 
 gdate = get_date
 date_last_week = gdate.return_date(7)
 date_last_2week = gdate.return_date(14)
 date_last_month = gdate.return_date(30)
-date_last_3month = gdate.return_date(90)
+date_last_3month = gdate.return_date(180)
 
 time_frames = [
     {
@@ -161,6 +166,25 @@ def main():
         lowss = []
         highss = []
         finals = []
+
+        cld = calculate_last_date
+        last = cld.get_last_date(ticker['ticker'])
+
+        last = last[0]
+        last = last[:11]
+        last = parser.parse(last)
+        # print(last)
+
+        first = datetime.datetime.utcnow()
+        first = str(first)
+        first = first[:11]
+        first = parser.parse(first)
+        # print(first)
+
+        delta = first - last
+        print(delta.days)
+
+        time_frames.append({'timeframe': gdate.return_date(delta.days), 'granularity': 'M15'})
         for time in time_frames:
             csr = calculate_support_resistance
             gd = get_data
@@ -204,12 +228,14 @@ def main():
             print('lows/support: ', lowss)
             print('highs/resistance: ', highss)
 
+        time_frames.pop(4)
+
         symbol = str(ticker['ticker'])
         # Plotting
         plt.style.use('fast')
-        ohlc = data.loc[:, ['Open', 'High', 'Low', 'Close']]
-        fig, ax = mpf.plot(ohlc.dropna(), type='candle', style='charles', show_nontrading=False, returnfig=True,
-                           ylabel='Price', title=symbol)
+        ohlcv = data.loc[:, ['Open', 'High', 'Low', 'Close', 'Volume']]
+        fig, ax = mpf.plot(ohlcv.dropna(), type='candle', style='charles', show_nontrading=False, returnfig=True,
+                           ylabel='Price', title=symbol, volume=True)
 
         for low in lowss[:9]:
             ax[0].axhline(low[0], color='green', ls='-', alpha=.2)
