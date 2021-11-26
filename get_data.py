@@ -7,16 +7,14 @@ class get_data():
     def __init__(self):
         return
 
-    def feedData(gran, ticker, start_date):
-        now = datetime.datetime.utcnow()
-        date_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    def feedData(gran, ticker, start_date, end_date):
         #print("date and time:", date_time)
         # Oanda API setup
         # from oandapyV20 import API
-        client = API(access_token='acess token')
+        client = API(access_token='ecfc535793f6f636c305b190af8d86e2-4aaa4e49d92622062ecce655277c1749')
         instrument, granularity = ticker, gran
         stDt = start_date
-        edDt = date_time
+        edDt = end_date
         #edDt = '2021-11-11T00:00:00Z'
         params = {'from': stDt, 'to': edDt, 'granularity': granularity}
         reList = []

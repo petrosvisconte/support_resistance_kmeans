@@ -1,6 +1,5 @@
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-
 class calculate_support_resistance:
     def get_optimum_clusters(df, saturation_point=0.05):
         wcss = []
@@ -12,10 +11,10 @@ class calculate_support_resistance:
             wcss.append(kmeans.inertia_)
             k_models.append(kmeans)
 
-        # View inertia - good for electing the saturation point
         #print(wcss)
+        #print(k_models)
 
-        # Compare differences in inertias until it's no more than saturation_point
+        #           SILOUETTE METHOD
         optimum_k = len(wcss) - 1
         for i in range(0, len(wcss) - 1):
             diff = abs(wcss[i + 1] - wcss[i])
@@ -24,6 +23,32 @@ class calculate_support_resistance:
                 break
 
         print("Optimum K is " + str(optimum_k + 1))
-        optimum_clusters = k_models[optimum_k]
+        optimum_clusters = k_models[9]
+
+
+        #           ELBOW METHOD
+        #from yellowbrick.cluster import KElbowVisualizer
+        #model = KMeans()
+        #visualizer = KElbowVisualizer(model, k=(2, 30), timings=True)
+        #visualizer.fit(df)
+        #print("Optimal K: ", str(visualizer.elbow_value_))
+        #optimum_clusters = k_models[visualizer.elbow_value_]
+        #visualizer.show()
+
+        #           DENDOGRAM - HIERARCHICAL METHOD
+        #import scipy.cluster.hierarchy as shc
+        #from matplotlib import pyplot
+        #pyplot.figure(figsize=(10, 7))
+        #pyplot.title("Dendrograms")
+        #dend = shc.dendrogram(shc.linkage(df, method='ward'))
+        #pyplot.show()
+
+        #           CALINSKI HARABASZ SCORE
+        #from yellowbrick.cluster import KElbowVisualizer
+        #model = KMeans()
+        #visualizer = KElbowVisualizer(model, k=(2, 30), metric='calinski_harabasz', timings=True)
+        #visualizer.fit(df)  # Fit the data to the visualizer
+        #optimum_clusters = k_models[visualizer.elbow_value_]
+        #visualizer.show()  # Finalize and render the figure
 
         return optimum_clusters

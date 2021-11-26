@@ -1,5 +1,4 @@
 import datetime
-
 from calculate_support_resistance import calculate_support_resistance
 from get_data import get_data
 import numpy as np
@@ -10,6 +9,10 @@ from get_date import get_date
 from calculate_last_date import calculate_last_date
 from dateutil import parser
 
+begin_time = datetime.datetime.now()
+
+now = datetime.datetime.utcnow()
+date_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 gdate = get_date
 date_last_week = gdate.return_date(7)
@@ -21,22 +24,26 @@ time_frames = [
     {
         # 1 week 1 minute candles
         'timeframe': date_last_week,
-        'granularity': 'M1'
+        'granularity': 'M1',
+        'end_date': date_time
     },
     {
-        # 2 week 15 minute candles
+        # 2 week 5 minute candles
        'timeframe': date_last_2week,
-        'granularity': 'M15'
+        'granularity': 'M5',
+        'end_date': date_time
     },
     {
-        # 1 month 1 hour candles
+        # 1 month 15 minute candles
         'timeframe': date_last_month,
-        'granularity': 'H1'
+        'granularity': 'M15',
+        'end_date': date_time
     },
     {
-        # 3 months 4 hour candles
+        # 3 months 1 hour candles
         'timeframe': date_last_3month,
-        'granularity': 'H4'
+        'granularity': 'H1',
+        'end_date': date_time
     }
 
 ]
@@ -168,7 +175,7 @@ def main():
         finals = []
 
         cld = calculate_last_date
-        last = cld.get_last_date(ticker['ticker'])
+        last = cld.get_last_date(ticker['ticker'], date_time)
 
         last = last[0]
         last = last[:11]
@@ -184,14 +191,20 @@ def main():
         delta = first - last
         print(delta.days)
 
-        time_frames.append({'timeframe': gdate.return_date(delta.days), 'granularity': 'M15'})
+        end_date = str(cld.get_forward_date(ticker['ticker'], date_time))
+        end_date = end_date[:16] + ':00Z'
+        print(end_date)
+
+        time_frames.append({'timeframe': gdate.return_date(delta.days), 'granularity': 'M15', 'end_date': end_date})
+        time_frames.append({'timeframe': gdate.return_date(delta.days), 'granularity': 'H1', 'end_date': date_time})
+
         for time in time_frames:
             csr = calculate_support_resistance
             gd = get_data
 
-            gd.feedData(time['granularity'], ticker['ticker'], time['timeframe'])
-            print(time['granularity'])
-            print(time['timeframe'])
+            gd.feedData(time['granularity'], ticker['ticker'], time['timeframe'], time['end_date'])
+            #print(time['granularity'])
+            #print(time['timeframe'])
             df = pd.read_csv('data.csv', header=None)
             df.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
             # print(df)
@@ -199,10 +212,11 @@ def main():
             data = data.set_index(pd.DatetimeIndex(data['Date']))
             #print(data)
 
-            lows = pd.DataFrame(data=data, index=data.index, columns=["Close"])
+            lows = pd.DataFrame(data=data, index=data.index, columns=["Low"])
             highs = pd.DataFrame(data=data, index=data.index, columns=["High"])
 
             low_clusters = csr.get_optimum_clusters(lows)
+            print(datetime.datetime.now() - begin_time)
             low_centers = low_clusters.cluster_centers_
             low_centers = np.sort(low_centers, axis=0)
 
@@ -228,21 +242,34 @@ def main():
             print('lows/support: ', lowss)
             print('highs/resistance: ', highss)
 
+        time_frames.pop(5)
         time_frames.pop(4)
 
         symbol = str(ticker['ticker'])
         # Plotting
         plt.style.use('fast')
+        #gd.feedData('H4', ticker['ticker'], gdate.return_date(180), date_time)
+        #df = pd.read_csv('data.csv', header=None)
+        #df.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
+        #data = pd.DataFrame(df)
+        #data = data.set_index(pd.DatetimeIndex(data['Date']))
         ohlcv = data.loc[:, ['Open', 'High', 'Low', 'Close', 'Volume']]
-        fig, ax = mpf.plot(ohlcv.dropna(), type='candle', style='charles', show_nontrading=False, returnfig=True,
+        #ohlcv = ohlcv.tail(2000)
+        fig, ax = mpf.plot(ohlcv.dropna(), type='line', style='charles', show_nontrading=False, returnfig=True,
                            ylabel='Price', title=symbol, volume=True)
 
+        current_price = float(data.tail(1).get('Close'))
         for low in lowss[:9]:
-            ax[0].axhline(low[0], color='green', ls='-', alpha=.2)
+            if low > current_price:
+                ax[0].axhline(low[0], color='red', ls='-', alpha=.2)
+            else:
+                ax[0].axhline(low[0], color='green', ls='-', alpha=.2)
 
         for high in highss[-9:]:
-            ax[0].axhline(high[0], color='red', ls='-', alpha=.1)
-
+            if high > current_price:
+                ax[0].axhline(high[0], color='red', ls='-', alpha=.1)
+            else:
+                ax[0].axhline(high[0], color='green', ls='-', alpha=.2)
         plt.show()
 
 
