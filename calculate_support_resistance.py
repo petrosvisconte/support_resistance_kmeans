@@ -23,7 +23,7 @@ class calculate_support_resistance:
                 break
 
         print("Optimum K is " + str(optimum_k + 1))
-        optimum_clusters = k_models[9]
+        optimum_clusters = k_models[optimum_k]
 
 
         #           ELBOW METHOD
