@@ -4,6 +4,8 @@ from get_date import get_date
 from calculate_last_date import calculate_last_date
 from dateutil import parser
 from plot_data import plot_data
+import schedule
+import time
 
 begin_time = datetime.datetime.now()
 
@@ -191,7 +193,8 @@ def main():
         #   calculates S/R for each time frame
         for time in time_frames:
             csr = calculate_support_resistance
-            lowss, highss, data = csr.calculate(time['granularity'], ticker['ticker'], time['timeframe'], time['end_date'])
+            lows, highs, data = csr.calculate(time['granularity'], ticker['ticker'], time['timeframe'], time['end_date'])
+            lowss.extend(lows)
 
         time_frames.pop(5)
         time_frames.pop(4)
@@ -200,9 +203,11 @@ def main():
         plotd = plot_data
         plotd.plot(ticker['ticker'], data, lowss, highss)
 
-
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    main()
+    schedule.every(0).minutes.do(main)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+    #main()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
