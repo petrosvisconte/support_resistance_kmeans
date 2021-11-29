@@ -170,30 +170,25 @@ def main():
         highss = []
         finals = []
 
+        #   gets dates and appends to time_frames
         cld = calculate_last_date
         last = cld.get_last_date(ticker['ticker'], date_time)
-
         last = last[0]
         last = last[:11]
         last = parser.parse(last)
-        # print(last)
-
         first = datetime.datetime.utcnow()
         first = str(first)
         first = first[:11]
         first = parser.parse(first)
-        # print(first)
-
         delta = first - last
         print(delta.days)
-
         end_date = str(cld.get_forward_date(ticker['ticker'], date_time))
         end_date = end_date[:16] + ':00Z'
         print(end_date)
-
         time_frames.append({'timeframe': gdate.return_date(delta.days), 'granularity': 'M15', 'end_date': end_date})
         time_frames.append({'timeframe': gdate.return_date(delta.days), 'granularity': 'H1', 'end_date': date_time})
 
+        #   calculates S/R for each time frame
         for time in time_frames:
             csr = calculate_support_resistance
             lowss, highss, data = csr.calculate(time['granularity'], ticker['ticker'], time['timeframe'], time['end_date'])
@@ -201,6 +196,7 @@ def main():
         time_frames.pop(5)
         time_frames.pop(4)
 
+        #   plots data
         plotd = plot_data
         plotd.plot(ticker['ticker'], data, lowss, highss)
 
