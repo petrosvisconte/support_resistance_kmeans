@@ -1,5 +1,9 @@
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+from get_data import  get_data
+import pandas as pd
+import numpy as np
+
 class calculate_support_resistance:
     def get_optimum_clusters(df, saturation_point=0.05):
         wcss = []
@@ -25,30 +29,45 @@ class calculate_support_resistance:
         print("Optimum K is " + str(optimum_k + 1))
         optimum_clusters = k_models[optimum_k]
 
-
-        #           ELBOW METHOD
-        #from yellowbrick.cluster import KElbowVisualizer
-        #model = KMeans()
-        #visualizer = KElbowVisualizer(model, k=(2, 30), timings=True)
-        #visualizer.fit(df)
-        #print("Optimal K: ", str(visualizer.elbow_value_))
-        #optimum_clusters = k_models[visualizer.elbow_value_]
-        #visualizer.show()
-
-        #           DENDOGRAM - HIERARCHICAL METHOD
-        #import scipy.cluster.hierarchy as shc
-        #from matplotlib import pyplot
-        #pyplot.figure(figsize=(10, 7))
-        #pyplot.title("Dendrograms")
-        #dend = shc.dendrogram(shc.linkage(df, method='ward'))
-        #pyplot.show()
-
-        #           CALINSKI HARABASZ SCORE
-        #from yellowbrick.cluster import KElbowVisualizer
-        #model = KMeans()
-        #visualizer = KElbowVisualizer(model, k=(2, 30), metric='calinski_harabasz', timings=True)
-        #visualizer.fit(df)  # Fit the data to the visualizer
-        #optimum_clusters = k_models[visualizer.elbow_value_]
-        #visualizer.show()  # Finalize and render the figure
-
         return optimum_clusters
+
+    def calculate(gran, ticker, start_date, end_date):
+        csr = calculate_support_resistance
+        gd = get_data
+
+        lowss = []
+        highss = []
+
+        gd.feedData(gran, ticker, start_date, end_date)
+        # print(time['granularity'])
+        # print(time['timeframe'])
+        df = pd.read_csv('data.csv', header=None)
+        df.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
+        # print(df)
+        data = pd.DataFrame(df)
+        data = data.set_index(pd.DatetimeIndex(data['Date']))
+        # print(data)
+
+        lows = pd.DataFrame(data=data, index=data.index, columns=["Low"])
+        highs = pd.DataFrame(data=data, index=data.index, columns=["High"])
+
+        low_clusters = csr.get_optimum_clusters(lows)
+        low_centers = low_clusters.cluster_centers_
+        low_centers = np.sort(low_centers, axis=0)
+
+        high_clusters = csr.get_optimum_clusters(highs)
+        high_centers = high_clusters.cluster_centers_
+        high_centers = np.sort(high_centers, axis=0)
+
+        for i in low_centers:
+            # i = float(i)
+            lowss.append(i)
+
+        for i in high_centers:
+            # i = float(i)
+            highss.append(i)
+
+        print('lows/support: ', lowss)
+        print('highs/resistance: ', highss)
+
+        return lowss, highss, data

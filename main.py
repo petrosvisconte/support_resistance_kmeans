@@ -1,13 +1,9 @@
 import datetime
 from calculate_support_resistance import calculate_support_resistance
-from get_data import get_data
-import numpy as np
-import pandas as pd
-from matplotlib import pyplot as plt
-import mplfinance as mpf
 from get_date import get_date
 from calculate_last_date import calculate_last_date
 from dateutil import parser
+from plot_data import plot_data
 
 begin_time = datetime.datetime.now()
 
@@ -18,7 +14,7 @@ gdate = get_date
 date_last_week = gdate.return_date(7)
 date_last_2week = gdate.return_date(14)
 date_last_month = gdate.return_date(30)
-date_last_3month = gdate.return_date(180)
+date_last_3month = gdate.return_date(90)
 
 time_frames = [
     {
@@ -200,77 +196,13 @@ def main():
 
         for time in time_frames:
             csr = calculate_support_resistance
-            gd = get_data
-
-            gd.feedData(time['granularity'], ticker['ticker'], time['timeframe'], time['end_date'])
-            #print(time['granularity'])
-            #print(time['timeframe'])
-            df = pd.read_csv('data.csv', header=None)
-            df.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
-            # print(df)
-            data = pd.DataFrame(df)
-            data = data.set_index(pd.DatetimeIndex(data['Date']))
-            #print(data)
-
-            lows = pd.DataFrame(data=data, index=data.index, columns=["Low"])
-            highs = pd.DataFrame(data=data, index=data.index, columns=["High"])
-
-            low_clusters = csr.get_optimum_clusters(lows)
-            print(datetime.datetime.now() - begin_time)
-            low_centers = low_clusters.cluster_centers_
-            low_centers = np.sort(low_centers, axis=0)
-
-            high_clusters = csr.get_optimum_clusters(highs)
-            high_centers = high_clusters.cluster_centers_
-            high_centers = np.sort(high_centers, axis=0)
-
-            # How good are the clusters?
-            #low_score = silhouette_score(lows, low_clusters.labels_)
-            #high_score = silhouette_score(highs, high_clusters.labels_)
-            #print(f"Silhouette score Lows: {low_score} Highs: {high_score}")
-
-            rounding_factor = 2
-
-            for i in low_centers:
-                #i = float(i)
-                lowss.append(i)
-
-            for i in high_centers:
-                #i = float(i)
-                highss.append(i)
-
-            print('lows/support: ', lowss)
-            print('highs/resistance: ', highss)
+            lowss, highss, data = csr.calculate(time['granularity'], ticker['ticker'], time['timeframe'], time['end_date'])
 
         time_frames.pop(5)
         time_frames.pop(4)
 
-        symbol = str(ticker['ticker'])
-        # Plotting
-        plt.style.use('fast')
-        #gd.feedData('H4', ticker['ticker'], gdate.return_date(180), date_time)
-        #df = pd.read_csv('data.csv', header=None)
-        #df.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
-        #data = pd.DataFrame(df)
-        #data = data.set_index(pd.DatetimeIndex(data['Date']))
-        ohlcv = data.loc[:, ['Open', 'High', 'Low', 'Close', 'Volume']]
-        #ohlcv = ohlcv.tail(2000)
-        fig, ax = mpf.plot(ohlcv.dropna(), type='line', style='charles', show_nontrading=False, returnfig=True,
-                           ylabel='Price', title=symbol, volume=True)
-
-        current_price = float(data.tail(1).get('Close'))
-        for low in lowss[:9]:
-            if low > current_price:
-                ax[0].axhline(low[0], color='red', ls='-', alpha=.2)
-            else:
-                ax[0].axhline(low[0], color='green', ls='-', alpha=.2)
-
-        for high in highss[-9:]:
-            if high > current_price:
-                ax[0].axhline(high[0], color='red', ls='-', alpha=.1)
-            else:
-                ax[0].axhline(high[0], color='green', ls='-', alpha=.2)
-        plt.show()
+        plotd = plot_data
+        plotd.plot(ticker['ticker'], data, lowss, highss)
 
 
 # Press the green button in the gutter to run the script.
