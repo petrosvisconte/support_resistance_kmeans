@@ -11,7 +11,7 @@ class get_data():
         #print("date and time:", date_time)
         # Oanda API setup
         # from oandapyV20 import API
-        client = API(access_token='access tokene')
+        client = API(access_token='access token')
         instrument, granularity = ticker, gran
         stDt = start_date
         edDt = end_date
